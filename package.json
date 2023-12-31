@@ -19,7 +19,7 @@
     "webpack-dev-server": "^4.15.1"
   },
   "scripts": {
-    "build": "webpack",
+    "build": "webpack ./src/app.ts --output-filename=bundle.js --mode=development",
     "start": "webpack-dev-server"
   }
 }

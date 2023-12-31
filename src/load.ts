@@ -87,7 +87,7 @@ export class SpinnyLoadScreen {
     this.time = now;
 
     mesh.rotate(Vector3.Right(), rotVel.x * deltaTSeconds, Space.WORLD);
-    mesh.rotate(Vector3.Forward(), rotVel.y * deltaTSeconds, Space.WORLD);
+    mesh.rotate(Vector3.Down(), rotVel.y * deltaTSeconds, Space.WORLD);
     rotVel.x = this.damp(
       rotVel.x,
       this.drag ? 0 : this.baseVel.x,
