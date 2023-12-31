@@ -12,22 +12,22 @@ name: Setup Bun
           
 name: Send dist to pages
 
-on:
-  push:
-    branches: [ master ]
+  on:
+    push:
+      branches: [ master ]
 
-jobs:
-  build-version:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Git checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: '0'
-    - name: git
-      run: |
-        # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-        git --version
-        git subtree push --prefix dist origin gh-pages
+  jobs:
+    build-version:
+  
+      runs-on: ubuntu-latest
+  
+      steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: git
+        run: |
+          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
+          git --version
+          git subtree push --prefix dist origin gh-pages
