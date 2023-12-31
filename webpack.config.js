@@ -20,6 +20,7 @@ module.exports = {
     hot: true,
     devMiddleware: {
       publicPath: "/",
+      writeToDisk: true,
     },
   },
   module: {
@@ -33,6 +34,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+    path: "/",
       inject: true,
       template: path.resolve(appDirectory, "public/index.html"),
     }),
