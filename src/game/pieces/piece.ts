@@ -1,13 +1,18 @@
 import { Board } from "../board/board";
 import { Spot } from "../board/spot";
 
-export abstract class Piece implements Occupier {
+export abstract class Piece implements Occupier, Movable {
   private color: Color;
   private name: string;
 
   constructor(name: string, color: Color) {
     this.name = name;
     this.color = color;
+  }
+
+  public moveTo(spot: Spot) {
+    spot.evict();
+    spot.welcome(this);
   }
 
   //write setters and getters
@@ -25,6 +30,11 @@ export abstract class Piece implements Occupier {
 
   public isCapturableBy(piece: Piece) {
     return this.getColor() != piece.getColor();
+  }
+
+  public canMoveTo(bitLocation: number, board: Board): number[] {
+    //i have no idea why i need to implement these in an abstract class ill figure it out later
+    return [];
   }
 }
 

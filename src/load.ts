@@ -8,8 +8,15 @@ import {
 
 export const defSens = (sens: number, x: number) =>
   Math.sign(x) * Math.log(sens * Math.abs(x) + 1);
-export const defDamp = (dampenAmt: number, x: number, maxDelta: number) =>
-  Math.sign(x) * Math.min(Math.abs(x * dampenAmt), maxDelta);
+export const defDamp = (
+  dampening: number,
+  vel: number,
+  minAbs: number,
+  secondsPassed: number,
+) =>
+  (vel - Math.sign(vel) * minAbs) *
+    Math.pow(Math.E, -Math.pow(dampening * secondsPassed, 2)) +
+  Math.sign(vel) * minAbs;
 
 /**
  * Makes a loading screen with a little spinny thing
@@ -25,7 +32,7 @@ export class SpinnyLoadScreen {
   lastPointerPos: { x: number; y: number };
   rotVel: { x: number; y: number };
   sens: (x: number) => number;
-  damp: (x: number, minAbs: number) => number;
+  damp: (x: number, minAbs: number, secondsPassed: number) => number;
   drag: boolean;
   time: number;
 
@@ -42,7 +49,7 @@ export class SpinnyLoadScreen {
     camDist: number,
     camAngle: number,
     sensitivity = defSens.bind(null, [0.05]),
-    dampening = defDamp.bind(null, [1.5]),
+    dampening = defDamp.bind(null, [1]),
   ) {
     this.mesh = meshToSpin;
 
@@ -74,21 +81,22 @@ export class SpinnyLoadScreen {
   }
   private update() {
     const now = performance.now();
-    const deltaT = (now - this.time) / 1000;
+    const deltaTSeconds = (now - this.time) / 1000;
     const rotVel = this.rotVel;
     const mesh = this.mesh;
     this.time = now;
 
-    mesh.rotate(Vector3.Right(), rotVel.x * deltaT, Space.WORLD);
-    mesh.rotate(Vector3.Forward(), rotVel.y * deltaT, Space.WORLD);
-
-    rotVel.x -= this.damp(
-      rotVel.x * deltaT,
-      Math.abs(this.baseVel.x - rotVel.x),
+    mesh.rotate(Vector3.Right(), rotVel.x * deltaTSeconds, Space.WORLD);
+    mesh.rotate(Vector3.Forward(), rotVel.y * deltaTSeconds, Space.WORLD);
+    rotVel.x = this.damp(
+      rotVel.x,
+      this.drag ? 0 : this.baseVel.x,
+      deltaTSeconds,
     );
-    rotVel.y -= this.damp(
-      rotVel.y * deltaT,
-      Math.abs(this.baseVel.y - rotVel.y),
+    rotVel.y = this.damp(
+      rotVel.y,
+      this.drag ? 0 : this.baseVel.y,
+      deltaTSeconds,
     );
   }
 

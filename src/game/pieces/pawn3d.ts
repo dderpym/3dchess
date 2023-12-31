@@ -1,6 +1,5 @@
 import { toBitmappedInt } from "../board/bitmapper";
 import { Board } from "../board/board";
-import { Spot } from "../board/spot";
 import { Color, Orientable, Piece } from "./piece";
 
 /*

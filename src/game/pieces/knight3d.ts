@@ -1,7 +1,6 @@
 import { fromBitmappedInt, toBitmappedInt } from "../board/bitmapper";
 import { Board } from "../board/board";
-import { Spot } from "../board/spot";
-import { Color, Orientable, Piece } from "./piece";
+import { Color, Piece } from "./piece";
 
 const quad1Moves = [
   [0, 1, 2],
