@@ -36,6 +36,11 @@ export class SpinnyLoadScreen {
   drag: boolean;
   time: number;
 
+  updateFn: () => void;
+  pointerUpFn: (evt: PointerEvent) => void;
+  pointerDownFn: (evt: PointerEvent) => void;
+  pointerMoveFn: (evt: PointerEvent) => void;
+
   /**
    * @param meshToSpin - the mesh that will be spun while loading
    * @param baseVel - the initial and minimum rotational velocity (passed to maxDelta on most things)
@@ -120,10 +125,24 @@ export class SpinnyLoadScreen {
     );
 
     this.time = performance.now();
-    scene.registerBeforeRender(this.update.bind(this));
+    const updateFn = this.update.bind(this);
+    scene.registerBeforeRender(updateFn);
 
-    canvas.addEventListener("pointerdown", this.onPointerDown.bind(this));
-    canvas.addEventListener("pointerup", this.onPointerUp.bind(this));
-    canvas.addEventListener("pointermove", this.onMouseMove.bind(this));
+    const pointerDownFn = this.onPointerDown.bind(this);
+    const pointerUpFn = this.onPointerUp.bind(this);
+    const pointerMoveFn = this.onMouseMove.bind(this);
+    canvas.addEventListener("pointerdown", pointerDownFn);
+    canvas.addEventListener("pointerup", pointerUpFn);
+    canvas.addEventListener("pointermove", pointerMoveFn);
+  }
+
+  public disconnect() {
+    const scene = this.mesh.getScene();
+    const canvas = scene.getEngine().getRenderingCanvas();
+
+    scene.unregisterBeforeRender(this.updateFn);
+    canvas.removeEventListener("pointerdown", this.pointerDownFn);
+    canvas.removeEventListener("pointerup", this.pointerUpFn);
+    canvas.removeEventListener("pointermove", this.pointerMoveFn);
   }
 }
