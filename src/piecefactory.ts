@@ -1,11 +1,12 @@
-import { Mesh, Scene } from "@babylonjs/core";
+import { Mesh, Scene, Vector3 } from "@babylonjs/core";
 import { King3d } from "./game/pieces/king3d";
 import { Knight3d } from "./game/pieces/knight3d";
-import { Color } from "./game/pieces/piece";
+import { Color, Piece } from "./game/pieces/piece";
 import { Queen3d } from "./game/pieces/queen3d";
 import { Rook3d } from "./game/pieces/rook3d";
 import { MeshBinder, loadMesh } from "./rendering/meshBinder";
 import { Pawn3d } from "./game/pieces/pawn3d";
+import { Bishop3d } from "./game/pieces/bishop3d";
 
 const modelDirectory = "./models/";
 
@@ -27,22 +28,23 @@ const pieces = {
   [Pieces.PAWN]: "pawn.obj",
 };
 
-export function createPieceWithModel(
+export async function createPieceWithModel(
   piece: Pieces,
   color: Color,
   boardSize: number[],
   scene: Scene,
   orientation: number[] = [1, 0, 0],
   runOnModel?: (mesh: Mesh) => void,
-) {
-  const model: Mesh = loadMesh(
+): Promise<MeshBinder<Piece>> {
+  const model: Mesh = await loadMesh(
     modelDirectory,
     pieces[piece],
     scene,
     runOnModel,
   );
 
-  let obj: any;
+  let obj: Piece;
+
   switch (piece) {
     case Pieces.KING:
       obj = new King3d(color, boardSize);
@@ -54,10 +56,11 @@ export function createPieceWithModel(
       obj = new Rook3d(color, boardSize);
       break;
     case Pieces.BISHOP:
-      obj = new Rook3d(color, boardSize);
+      obj = new Bishop3d(color, boardSize);
       break;
     case Pieces.KNIGHT:
       obj = new Knight3d(color, boardSize);
+      if (color == Color.WHITE) model.rotation = new Vector3(0, Math.PI, 0);
       break;
     case Pieces.PAWN:
       obj = new Pawn3d(color, boardSize, orientation);

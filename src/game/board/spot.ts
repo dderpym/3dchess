@@ -38,8 +38,10 @@ export class Spot {
   /**
    * removes the occupier from the spot
    */
-  public evict() {
+  public evict(): Occupier {
+    const lol = this.occupier;
     this.occupier = null;
+    return lol;
   }
 
   public welcome(occupier: Occupier) {
@@ -58,7 +60,9 @@ export class EdgeBarrier extends Spot {
     super(location, edgeBlocker, false);
   }
 
-  public evict() {}
+  public evict() {
+    return null;
+  }
   public welcome() {
     throw new Error("YO THIS IS AN EDGE BARRIER SPOT NO MOVING HERE");
   }

@@ -1,3 +1,4 @@
+import { Color, Piece, edgeBlocker } from "../pieces/piece";
 import { fromBitmappedInt, toBitmappedInt } from "./bitmapper";
 import { EdgeBarrier, Spot } from "./spot";
 
@@ -50,5 +51,17 @@ export class Board {
     for (let i = 0; i < location.length; ++i)
       if (location[i] < 0 || location[i] >= this.size[i]) return false;
     return true;
+  }
+  public getAllSpotsWithColoredPiece(color: Color) {
+    const spots: number[] = [];
+
+    this.board.forEach((spot, index) => {
+      const spotOccupier = spot.getOccupier();
+      if (spotOccupier instanceof Piece && spotOccupier.getColor() == color) {
+        spots.push(index);
+      }
+    });
+
+    return spots;
   }
 }

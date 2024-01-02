@@ -11,16 +11,23 @@ import {
   UniversalCamera,
   Color3,
   Color4,
+  Material,
+  ActionManager,
+  ExecuteCodeAction,
+  Action,
+  KeyboardEventTypes,
 } from "@babylonjs/core";
 import "@babylonjs/loaders/OBJ/objFileLoader";
 import { SpinnyLoadScreen, defDamp, defSens } from "./rendering/load";
-import { Color } from "./game/pieces/piece";
-import { toBitmappedInt } from "./game/board/bitmapper";
+import { Color, Piece } from "./game/pieces/piece";
 import { Board } from "./game/board/board";
+import { Pieces, createPieceWithModel } from "./piecefactory";
+import { GameBoard } from "./game/gameboard";
+import { toBitmappedInt } from "./game/board/bitmapper";
 
 const boardSize = [10, 7, 10];
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-const FORCED_LOAD_TIME = 500;
+const FORCED_LOAD_TIME = 0;
 
 class App {
   constructor() {
@@ -90,33 +97,29 @@ async function mainGameRunner(
     },
     [Color.BLACK]: (mesh: Mesh) => {
       mesh.enableEdgesRendering();
-      mesh.edgesWidth = 5;
+      mesh.edgesWidth = 1;
       mesh.edgesColor = col4white;
 
       mesh.material = blackPieceMat;
     },
   };
 
-  const board = new Board(boardSize);
-
-  const vectorGrid = createGrid([3, 3, 3], board, scene, (box) => {
-    box.material = transparent;
-    box.showBoundingBox = true;
+  const gameboard = new GameBoard({
+    board: new Board(boardSize),
+    scene: scene,
+    boxSize: 3,
+    runOnEachBox: (box: Mesh) => {
+      box.material = transparent;
+      box.showBoundingBox = true;
+      box.actionManager = new ActionManager(scene);
+      box.isPickable = false;
+    },
   });
-  const bitmappedGrid = [];
-  for (let i = 0; i < vectorGrid.length; i++) {
-    for (let j = 0; j < vectorGrid[i].length; j++) {
-      for (let k = 0; k < vectorGrid[i][j].length; k++) {
-        //this could probably be a simple push statement but lets play it safe
-        bitmappedGrid[toBitmappedInt([i, j, k], boardSize)] =
-          vectorGrid[i][j][k];
-      }
-    }
-  }
 
-  setupPieces(vectorGrid, boardSize, setup_material);
+  await setupPieces(gameboard, scene, setup_material);
 
   await sleep(FORCED_LOAD_TIME);
+
   scene.debugLayer.show();
 
   camera.attachControl();
@@ -128,16 +131,194 @@ async function mainGameRunner(
     scene.render();
   });
 
-  while (true) {
-    break;
+  const turnCycle = [Color.WHITE, Color.BLACK];
+
+  let turn = 0;
+  let affectedLocs = [];
+
+  const completeTurn = (from: number, to: number, beginnings: () => void) => {
+    clearAffected(affectedLocs, gameboard, transparent);
+    gameboard.movePiece(from, to);
+    turn++;
+    beginnings();
+  };
+
+  const pickMove = (from: number, beginnings: () => void) => {
+    clearAffected(affectedLocs, gameboard, transparent);
+
+    affectedLocs = moveSelectionPhase(
+      gameboard,
+      from,
+      frend,
+      opp,
+      (to: number) => {
+        completeTurn(from, to, beginnings);
+      },
+    );
+  };
+
+  const pickPieces = (beginnings: () => void = pickPieces) => {
+    const activeColor = turnCycle[turn % turnCycle.length];
+
+    affectedLocs = pieceSelectionPhase(
+      gameboard,
+      activeColor,
+      frend,
+      (from: number) => {
+        pickMove(from, beginnings);
+      },
+    );
+  };
+
+  scene.onKeyboardObservable.add((kbinfo) => {
+    switch (kbinfo.event.code) {
+      case "Escape":
+        if (kbinfo.type == KeyboardEventTypes.KEYUP) pickPieces();
+    }
+  });
+
+  pickPieces();
+}
+
+async function setupPieces(
+  gameboard: GameBoard,
+  scene: Scene,
+  setupMaterial, //typesig later
+) {
+  const locations: {
+    location: number[];
+    piece: Pieces;
+    color: Color;
+    orientation?: number[];
+  }[] = [
+    { location: [1, 3, 1], piece: Pieces.ROOK, color: Color.WHITE },
+    { location: [1, 3, 2], piece: Pieces.KNIGHT, color: Color.WHITE },
+    { location: [1, 3, 3], piece: Pieces.BISHOP, color: Color.WHITE },
+    { location: [1, 3, 4], piece: Pieces.KING, color: Color.WHITE },
+    { location: [1, 3, 5], piece: Pieces.QUEEN, color: Color.WHITE },
+    { location: [1, 3, 6], piece: Pieces.BISHOP, color: Color.WHITE },
+    { location: [1, 3, 7], piece: Pieces.KNIGHT, color: Color.WHITE },
+    { location: [1, 3, 8], piece: Pieces.ROOK, color: Color.WHITE },
+  ]; // major pieces
+  const maxX = gameboard.getBoardSize()[0] - 1;
+  const majorPieces = locations.length;
+  for (let i = 0; i < majorPieces; ++i) {
+    //mirror black by "fliping" x coords
+    const lol = locations[i];
+    const lorn = Array.from(locations[i].location, (v, k) =>
+      k == 0 ? maxX - v : v,
+    );
+    locations.push({ location: lorn, piece: lol.piece, color: Color.BLACK });
+  }
+
+  //pawns
+  for (let i = 1; i < 9; ++i) {
+    locations.push({
+      location: [2, 3, i],
+      piece: Pieces.PAWN,
+      color: Color.WHITE,
+      orientation: [1, 0, 0],
+    });
+  }
+
+  for (let i = 1; i < 9; ++i) {
+    locations.push({
+      location: [maxX - 2, 3, i],
+      piece: Pieces.PAWN,
+      color: Color.BLACK,
+      orientation: [-1, 0, 0],
+    });
+  }
+
+  const boardSize = gameboard.getBoardSize();
+
+  for (let i = 0; i < locations.length; ++i) {
+    const stuff = locations[i];
+    const meshboundPiece = await createPieceWithModel(
+      stuff.piece,
+      stuff.color,
+      boardSize,
+      scene,
+      stuff.orientation,
+      setupMaterial[stuff.color],
+    );
+    gameboard.addPiece(
+      meshboundPiece,
+      toBitmappedInt(stuff.location, boardSize),
+    );
   }
 }
 
-function setupPieces(
-  vectorGrid: Mesh[][][],
-  boardSize: number[],
-  setupMaterial,
-) {}
+function clearAffected(
+  affectedLocs: any[],
+  gameboard: GameBoard,
+  emptyMaterial: Material,
+) {
+  //fix up type sig later
+  affectedLocs.forEach((stuff) => {
+    gameboard.applyTo(stuff.location, (box: Mesh) => {
+      box.material = emptyMaterial;
+      box.actionManager.unregisterAction(stuff.action);
+      box.isPickable = false;
+    });
+  });
+  affectedLocs = [];
+}
+
+function pieceSelectionPhase(
+  gameboard: GameBoard,
+  activeColor: Color,
+  frendMaterial: Material,
+  triggerNext: (locationSelected: number) => void,
+): { location: number; action: Action }[] {
+  const affectedLocations = [];
+
+  gameboard.getAllOfColor(activeColor).forEach((location: number) => {
+    gameboard.applyTo(location, (box: Mesh) => {
+      box.material = frendMaterial;
+
+      box.isPickable = true;
+      const action = createAction(() => triggerNext(location));
+      box.actionManager.registerAction(action);
+
+      affectedLocations.push({ location: location, action: action });
+    });
+  });
+
+  return affectedLocations;
+}
+
+function moveSelectionPhase(
+  gameboard: GameBoard,
+  locationSelected: number,
+  movableMaterial: Material,
+  captureMaterial: Material,
+  triggerNext: (location: number) => void,
+) {
+  const affectedLocations = [];
+
+  gameboard.getAllMoveFrom(locationSelected).forEach((location: number) => {
+    gameboard.applyTo(location, (box: Mesh) => {
+      const occupier = gameboard.getAt(location).getOccupier();
+      if (occupier instanceof Piece) box.material = captureMaterial;
+      else box.material = movableMaterial;
+
+      box.isPickable = true;
+      const action = createAction(() => triggerNext(location));
+      box.actionManager.registerAction(action);
+
+      affectedLocations.push({ location: location, action: action });
+    });
+  });
+
+  return affectedLocations;
+}
+
+function createAction(whenClicked: () => void) {
+  return new ExecuteCodeAction(ActionManager.OnLeftPickTrigger, () =>
+    whenClicked(),
+  );
+}
 
 function keyboardCameraControls(camera: UniversalCamera) {
   camera.keysUpward.push(69); //increase elevation
@@ -146,41 +327,6 @@ function keyboardCameraControls(camera: UniversalCamera) {
   camera.keysDown.push(83); //backwards
   camera.keysLeft.push(65);
   camera.keysRight.push(68);
-}
-
-function createGrid(
-  boxDims: number[],
-  board: Board,
-  scene: Scene,
-  runOnEachBox: (box: Mesh) => void,
-) {
-  const boxes = [];
-  const boardSize = board.getSize();
-
-  for (let x = 0; x < boardSize[0]; ++x) {
-    boxes[x] = [];
-    for (let y = 0; y < boardSize[1]; ++y) {
-      boxes[x][y] = [];
-      for (let z = 0; z < boardSize[2]; ++z) {
-        if (board.getAtVect([x, y, z]).rendered) {
-          const box = MeshBuilder.CreateBox(
-            "box" + x + "," + y + "," + z,
-            { width: boxDims[0], height: boxDims[1], depth: boxDims[2] },
-            scene,
-          );
-          box.position = new Vector3(
-            x * boxDims[0],
-            y * boxDims[1],
-            z * boxDims[2],
-          );
-          boxes[x][y][z] = box;
-          runOnEachBox(box);
-        }
-      }
-    }
-  }
-
-  return boxes;
 }
 
 function createLoadScreen(engine: Engine): [SpinnyLoadScreen, () => void] {

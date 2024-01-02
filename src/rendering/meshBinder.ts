@@ -1,11 +1,11 @@
 import { Mesh, Scene, SceneLoader } from "@babylonjs/core";
 
 /* binds a mesh to a thing */
-export class MeshBinder {
-  private object: any;
+export class MeshBinder<T> {
+  private object: T;
   private mesh: Mesh;
 
-  constructor(object: any, mesh: Mesh) {
+  constructor(object: T, mesh: Mesh) {
     this.object = object;
     this.mesh = mesh;
   }
@@ -14,21 +14,26 @@ export class MeshBinder {
     return this.mesh;
   }
 
-  getObject(): any {
+  getObject(): T {
     return this.object;
   }
 }
 
-export function loadMesh(
+export async function loadMesh(
   directory: string,
   fileName: string,
   scene: Scene,
   runOnMesh: (mesh: Mesh) => void = () => {},
 ) {
   let mesh: Mesh;
-  SceneLoader.ImportMesh("", directory, fileName, scene, (meshes: Mesh[]) => {
-    mesh = meshes[0];
-    runOnMesh(mesh);
-  });
+
+  mesh = await SceneLoader.ImportMeshAsync("", directory, fileName, scene).then(
+    (result) => {
+      return result.meshes[0] as Mesh;
+    },
+  );
+
+  runOnMesh(mesh);
+
   return mesh;
 }
