@@ -1,3 +1,4 @@
+import { Pieces } from "../../piecefactory";
 import { toBitmappedInt } from "../board/bitmapper";
 import { Board } from "../board/board";
 import { Color, Piece } from "./piece";
@@ -14,7 +15,7 @@ export class Bishop3d extends Piece {
   private bitmappedDir: number[];
 
   constructor(color: Color, boardSize: number[]) {
-    super("bishop", color);
+    super(Pieces.BISHOP, color);
     const bitmappedDir = [];
     const dir = new Array(boardSize.length).fill(0);
 
@@ -28,8 +29,6 @@ export class Bishop3d extends Piece {
       dir[coord1] = 0;
       dir[coord2] = 0;
     }
-
-    
 
     this.bitmappedDir = bitmappedDir;
   }

@@ -14,7 +14,7 @@ export class Queen3d extends Piece {
   private bitmappedDir: number[];
 
   constructor(color: Color, boardSize: number[]) {
-    super("bishop", color);
+    super("queen", color);
     const bitmappedDir = [];
     const dir = new Array(boardSize.length).fill(0);
 
