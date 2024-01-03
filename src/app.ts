@@ -120,8 +120,6 @@ async function mainGameRunner(
 
   await sleep(FORCED_LOAD_TIME);
 
-  scene.debugLayer.show();
-
   camera.attachControl();
   keyboardCameraControls(camera);
 

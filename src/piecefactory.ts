@@ -8,7 +8,7 @@ import { MeshBinder, loadMesh } from "./rendering/meshBinder";
 import { Pawn3d } from "./game/pieces/pawn3d";
 import { Bishop3d } from "./game/pieces/bishop3d";
 
-const modelDirectory = "/public/models/";
+const modelDirectory = "./models/";
 
 export enum Pieces {
   KING = "k",

@@ -1,6 +1,11 @@
 {
   "name": "3dchess",
   "module": "src/app.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dderpym/3,dchess.git"
+  },
+  "homepage": "http://dderpym.github.io/3dchess",
   "type": "commonjs",
   "devDependencies": {
     "bun-types": "latest"
@@ -20,6 +25,8 @@
   },
   "scripts": {
     "build": "webpack ./src/app.ts --output-filename=bundle.js --mode=development",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+"predeploy": "npm run build",
+"deploy": "gh-pages -d dist"
   }
 }
