@@ -9,7 +9,6 @@ import { Pawn3d } from "./game/pieces/pawn3d";
 import { Bishop3d } from "./game/pieces/bishop3d";
 
 const modelDirectory = "./models/";
-
 export enum Pieces {
   KING = "k",
   QUEEN = "q",

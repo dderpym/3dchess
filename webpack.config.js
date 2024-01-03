@@ -30,11 +30,15 @@ module.exports = {
         use: "ts-loader",
         exclude: /node_modules/,
       },
+      {
+        test: /\.obj$/,
+        use: "webpack-obj-loader",
+      },
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-    path: "/",
+      path: "/",
       inject: true,
       template: path.resolve(appDirectory, "public/index.html"),
     }),

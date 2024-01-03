@@ -26,7 +26,6 @@
   "scripts": {
     "build": "webpack ./src/app.ts --output-filename=bundle.js --mode=development",
     "start": "webpack-dev-server",
-"predeploy": "npm run build",
-"deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist"
   }
 }
