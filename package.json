@@ -24,7 +24,7 @@
     "webpack-dev-server": "^4.15.1"
   },
   "scripts": {
-    "build": "webpack ./src/app.ts --output-filename=bundle.js --mode=development",
+    "build": "webpack ./src/app.ts --output-filename=bundle.js --mode=development && cp -r ./public/models ./dist/models",
     "start": "webpack-dev-server",
     "deploy": "gh-pages -d dist"
   }

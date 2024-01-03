@@ -24,6 +24,7 @@ import { Board } from "./game/board/board";
 import { Pieces, createPieceWithModel } from "./piecefactory";
 import { GameBoard } from "./game/gameboard";
 import { toBitmappedInt } from "./game/board/bitmapper";
+import { King3d } from "./game/pieces/king3d";
 
 const boardSize = [10, 7, 10];
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
@@ -136,9 +137,11 @@ async function mainGameRunner(
 
   const completeTurn = (from: number, to: number, beginnings: () => void) => {
     clearAffected(affectedLocs, gameboard, transparent);
+    const piece = gameboard.getPieceMeshbinder(to);
     gameboard.movePiece(from, to);
+    if (piece && piece.getObject() instanceof King3d) alert("ez claps");
+    else beginnings();
     turn++;
-    beginnings();
   };
 
   const pickMove = (from: number, beginnings: () => void) => {
