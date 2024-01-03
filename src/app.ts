@@ -137,11 +137,13 @@ async function mainGameRunner(
 
   const completeTurn = (from: number, to: number, beginnings: () => void) => {
     clearAffected(affectedLocs, gameboard, transparent);
+    turn++;
+
     const piece = gameboard.getPieceMeshbinder(to);
     gameboard.movePiece(from, to);
+
     if (piece && piece.getObject() instanceof King3d) alert("ez claps");
     else beginnings();
-    turn++;
   };
 
   const pickMove = (from: number, beginnings: () => void) => {
