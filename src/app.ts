@@ -157,6 +157,7 @@ async function mainGameRunner(
 
   const pickPieces = (beginnings: () => void = pickPieces) => {
     const activeColor = turnCycle[turn % turnCycle.length];
+    clearAffected(affectedLocs, gameboard, transparent);
 
     affectedLocs = pieceSelectionPhase(
       gameboard,
